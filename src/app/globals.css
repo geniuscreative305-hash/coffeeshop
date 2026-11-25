@@ -1,0 +1,120 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-cream: #faf7f2;
+  --surface-white: #ffffff;
+  --border-sand: #ede6dc;
+  --espresso: #4a2c18;
+  --espresso-hover: #361f10;
+  --caramel: #8b5a2b;
+  --ink: #23170f;
+  --ink-muted: #6e5d52;
+}
+
+@layer base {
+  html {
+    font-size: 16px;
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--bg-cream);
+    color: var(--ink);
+    min-height: 100vh;
+    min-height: 100dvh;
+    overflow-x: hidden;
+  }
+
+  /* Consistent cross-browser form appearance reset (Safari/iOS/Firefox/Chrome/Samsung Internet) */
+  input,
+  select,
+  textarea,
+  button {
+    -webkit-appearance: none;
+    appearance: none;
+    font-family: inherit;
+  }
+
+  input[type="checkbox"],
+  input[type="radio"] {
+    -webkit-appearance: auto;
+    appearance: auto;
+  }
+}
+
+/* Custom clean scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f3ede4;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbbba8;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #8b5a2b;
+}
+
+/* Hide horizontal scrollbar on mobile category pills while keeping swipe */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Safe area utility for mobile bottom navbar */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* ============================================================================
+   STRICT PRINT & PDF ISOLATION (A4 & A5)
+   ============================================================================ */
+@media screen {
+  #printable-sheet {
+    display: none !important;
+  }
+}
+
+@media print {
+  html,
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    min-height: auto !important;
+    height: auto !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  body > *:not(#printable-sheet) {
+    display: none !important;
+  }
+
+  #printable-sheet {
+    display: block !important;
+    width: 100% !important;
+    position: static !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  .break-inside-avoid {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+}
