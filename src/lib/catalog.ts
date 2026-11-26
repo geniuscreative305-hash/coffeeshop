@@ -108,83 +108,95 @@ async function fetchCatalogFromDb(): Promise<PublicCatalogData> {
     };
   }
 
-  const [catRows, prodRows, variantRows, promoRows, voucherRows, tableRows, settingsRows] =
-    await Promise.all([
-      db
-        .select()
-        .from(categories)
-        .where(eq(categories.isActive, true))
-        .orderBy(asc(categories.sortOrder), asc(categories.id)),
-      db.select().from(products).orderBy(asc(products.id)),
-      db.select().from(productVariants).orderBy(asc(productVariants.id)),
-      db.select().from(promos).where(eq(promos.isActive, true)).orderBy(asc(promos.id)),
-      db.select().from(vouchers).where(eq(vouchers.isActive, true)).orderBy(asc(vouchers.id)),
-      db.select().from(cafeTables).where(eq(cafeTables.isActive, true)),
-      db.select().from(storeSettings).limit(1),
-    ]);
+  try {
+    const [catRows, prodRows, variantRows, promoRows, voucherRows, tableRows, settingsRows] =
+      await Promise.all([
+        db
+          .select()
+          .from(categories)
+          .where(eq(categories.isActive, true))
+          .orderBy(asc(categories.sortOrder), asc(categories.id)),
+        db.select().from(products).orderBy(asc(products.id)),
+        db.select().from(productVariants).orderBy(asc(productVariants.id)),
+        db.select().from(promos).where(eq(promos.isActive, true)).orderBy(asc(promos.id)),
+        db.select().from(vouchers).where(eq(vouchers.isActive, true)).orderBy(asc(vouchers.id)),
+        db.select().from(cafeTables).where(eq(cafeTables.isActive, true)),
+        db.select().from(storeSettings).limit(1),
+      ]);
 
-  const variantsByProduct = new Map<number, CatalogVariant[]>();
-  for (const v of variantRows) {
-    const list = variantsByProduct.get(v.productId) ?? [];
-    list.push({
-      id: v.id,
-      productId: v.productId,
-      groupName: v.groupName,
-      optionName: v.optionName,
-      additionalPrice: v.additionalPrice,
-      isRequired: v.isRequired,
-    });
-    variantsByProduct.set(v.productId, list);
+    const variantsByProduct = new Map<number, CatalogVariant[]>();
+    for (const v of variantRows) {
+      const list = variantsByProduct.get(v.productId) ?? [];
+      list.push({
+        id: v.id,
+        productId: v.productId,
+        groupName: v.groupName,
+        optionName: v.optionName,
+        additionalPrice: v.additionalPrice,
+        isRequired: v.isRequired,
+      });
+      variantsByProduct.set(v.productId, list);
+    }
+
+    const now = new Date();
+    const activeVouchers: CatalogVoucher[] = voucherRows
+      .filter((v) => v.validUntil > now && (v.usageLimit === null || v.usedCount < v.usageLimit))
+      .map((v) => ({
+        id: v.id,
+        code: v.code,
+        discountType: v.discountType,
+        discountValue: v.discountValue,
+        minOrderAmount: v.minOrderAmount,
+        maxDiscountAmount: v.maxDiscountAmount,
+        validUntil: v.validUntil.toISOString(),
+      }));
+
+    return {
+      categories: catRows,
+      products: prodRows.map((p) => ({
+        id: p.id,
+        categoryId: p.categoryId,
+        name: p.name,
+        slug: p.slug,
+        description: p.description,
+        price: p.price,
+        discountPrice: p.discountPrice,
+        imageUrl: p.imageUrl,
+        badgeLabel: p.badgeLabel,
+        isLimitedStock: p.isLimitedStock,
+        dailyQuota: p.dailyQuota,
+        remainingStock: p.remainingStock,
+        isAvailable: p.isAvailable,
+        variants: variantsByProduct.get(p.id) ?? [],
+      })),
+      promos: promoRows.map((pr) => ({
+        id: pr.id,
+        title: pr.title,
+        subtitle: pr.subtitle,
+        discountText: pr.discountText,
+        bannerImageUrl: pr.bannerImageUrl,
+        isActive: pr.isActive,
+        validUntil: pr.validUntil ? pr.validUntil.toISOString() : null,
+      })),
+      vouchers: activeVouchers,
+      tables: tableRows.map((t) => t.tableNumber),
+      settings: settingsRows[0] ?? DEFAULT_SETTINGS,
+    };
+  } catch (err) {
+    console.error("Failed to fetch catalog from Neon:", err);
+    return {
+      categories: [],
+      products: [],
+      promos: [],
+      vouchers: [],
+      tables: [],
+      settings: DEFAULT_SETTINGS,
+    };
   }
-
-  const now = new Date();
-  const activeVouchers: CatalogVoucher[] = voucherRows
-    .filter((v) => v.validUntil > now && (v.usageLimit === null || v.usedCount < v.usageLimit))
-    .map((v) => ({
-      id: v.id,
-      code: v.code,
-      discountType: v.discountType,
-      discountValue: v.discountValue,
-      minOrderAmount: v.minOrderAmount,
-      maxDiscountAmount: v.maxDiscountAmount,
-      validUntil: v.validUntil.toISOString(),
-    }));
-
-  return {
-    categories: catRows,
-    products: prodRows.map((p) => ({
-      id: p.id,
-      categoryId: p.categoryId,
-      name: p.name,
-      slug: p.slug,
-      description: p.description,
-      price: p.price,
-      discountPrice: p.discountPrice,
-      imageUrl: p.imageUrl,
-      badgeLabel: p.badgeLabel,
-      isLimitedStock: p.isLimitedStock,
-      dailyQuota: p.dailyQuota,
-      remainingStock: p.remainingStock,
-      isAvailable: p.isAvailable,
-      variants: variantsByProduct.get(p.id) ?? [],
-    })),
-    promos: promoRows.map((pr) => ({
-      id: pr.id,
-      title: pr.title,
-      subtitle: pr.subtitle,
-      discountText: pr.discountText,
-      bannerImageUrl: pr.bannerImageUrl,
-      isActive: pr.isActive,
-      validUntil: pr.validUntil ? pr.validUntil.toISOString() : null,
-    })),
-    vouchers: activeVouchers,
-    tables: tableRows.map((t) => t.tableNumber),
-    settings: settingsRows[0] ?? DEFAULT_SETTINGS,
-  };
 }
 
 export const getCachedCatalog = unstable_cache(
   async () => fetchCatalogFromDb(),
   ["public-catalog-v1"],
-  { tags: ["catalog"], revalidate: 300 }
+  { tags: ["catalog"], revalidate: 60 }
 );
