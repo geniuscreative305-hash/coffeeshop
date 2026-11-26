@@ -18,9 +18,9 @@ const jakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Brew & Bliss Coffee House — Specialty Coffee & Artisanal Pastries",
+  title: "Cafe Sejahtera — Specialty Coffee & Artisanal Pastries",
   description:
-    "Pesan kopi spesialti, pastry hangat, dan hidangan favorit Anda secara instan di Brew & Bliss Coffee House.",
+    "Pesan kopi spesialti, pastry hangat, dan hidangan favorit Anda secara instan di Cafe Sejahtera.",
 };
 
 export const viewport: Viewport = {
