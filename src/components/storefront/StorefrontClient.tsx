@@ -26,6 +26,7 @@ import type {
 } from "@/lib/catalog";
 import type { CartItem, SelectedVariant } from "@/lib/types";
 import { formatRupiah } from "@/lib/format";
+import { toSafeMapEmbedUrl } from "@/lib/maps";
 import { useToast } from "@/components/ui/ToastProvider";
 import { CategoryIcon } from "./CategoryIcon";
 import { VariantModal } from "./VariantModal";
@@ -657,10 +658,10 @@ export function StorefrontClient({
               </div>
             </div>
 
-            {catalog.settings.mapsEmbedUrl && (
+            {toSafeMapEmbedUrl(catalog.settings.mapsEmbedUrl, catalog.settings.address) && (
               <div className="rounded-2xl overflow-hidden border border-sand shadow-card aspect-video bg-white">
                 <iframe
-                  src={catalog.settings.mapsEmbedUrl}
+                  src={toSafeMapEmbedUrl(catalog.settings.mapsEmbedUrl, catalog.settings.address)}
                   className="w-full h-full border-0"
                   loading="lazy"
                   referrerPolicy="no-referrer-when-downgrade"
@@ -1057,9 +1058,9 @@ export function StorefrontClient({
           </div>
 
           <div className="col-span-7 rounded-2xl overflow-hidden border border-sand shadow-card min-h-[280px] bg-white">
-            {catalog.settings.mapsEmbedUrl && (
+            {toSafeMapEmbedUrl(catalog.settings.mapsEmbedUrl, catalog.settings.address) && (
               <iframe
-                src={catalog.settings.mapsEmbedUrl}
+                src={toSafeMapEmbedUrl(catalog.settings.mapsEmbedUrl, catalog.settings.address)}
                 className="w-full h-full border-0 min-h-[280px]"
                 loading="lazy"
                 referrerPolicy="no-referrer-when-downgrade"

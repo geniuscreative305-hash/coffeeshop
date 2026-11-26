@@ -3,6 +3,7 @@ import { revalidateTag } from "next/cache";
 import { eq } from "drizzle-orm";
 import { db, storeSettings, auditLogs } from "@/db";
 import { getAdminSession } from "@/lib/auth";
+import { resolveGoogleMapsEmbedUrl } from "@/lib/maps";
 
 export async function GET() {
   const session = await getAdminSession();
@@ -20,12 +21,18 @@ export async function PUT(request: Request) {
     const body = await request.json();
     const [existing] = await db.select().from(storeSettings).where(eq(storeSettings.id, 1)).limit(1);
 
+    const address = String(body.address || "").trim();
+    const resolvedMapsUrl = await resolveGoogleMapsEmbedUrl(
+      String(body.mapsEmbedUrl || ""),
+      address
+    );
+
     const payload = {
       id: 1,
       cafeName: String(body.cafeName || "Brew & Bliss Coffee House").trim(),
       tagline: String(body.tagline || "").trim(),
-      address: String(body.address || "").trim(),
-      mapsEmbedUrl: String(body.mapsEmbedUrl || "").trim(),
+      address,
+      mapsEmbedUrl: resolvedMapsUrl,
       openingHours: String(body.openingHours || "").trim(),
       whatsappNumber: String(body.whatsappNumber || "").trim(),
       isOpenNow: Boolean(body.isOpenNow),
